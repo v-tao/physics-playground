@@ -16,12 +16,17 @@ class Ball:
 
 class Game(arcade.Window):
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, pixels_per_meter=20):
         super().__init__(width, height)
         arcade.set_background_color(arcade.color.WHITE)
         self.shapes = []
         self.started = False
         self.t = 0
+        self.pixels_per_meter = pixels_per_meter
+        #fullscreen, totally did not copy and paste from docs
+        # width, height = self.get_size()
+        # self.set_viewport(0, width, 0, height)
+        # self.set_fullscreen(True),
 
     def setup(self):
         self.shapes = []
@@ -35,6 +40,9 @@ class Game(arcade.Window):
         for s in self.shapes:
             arcade.draw_circle_filled(s.x, s.y, s.r, s.color)
 
+    def to_pixels(self, x):
+        return x * self.pixels_per_meter
+
     def update(self, dt):
         if self.started:
             t = self.get_time()
@@ -44,8 +52,8 @@ class Game(arcade.Window):
                 (x, y, vx, vy) = self.kinematics_2d(0, 4, t)
                 dx = vx * dt
                 dy = vy * dt
-                shape.x += dx
-                shape.y += dy
+                shape.x += self.to_pixels(dx)
+                shape.y += self.to_pixels(dy)
                 if shape.y <= shape.r:
                     shape.y = shape.r
                     shape.stopped = True
