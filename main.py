@@ -12,6 +12,7 @@ class Ball:
         self.y = s_y
         self.r = r
         self.color = clr
+        self.stopped = False
 
 class Game(arcade.Window):
 
@@ -38,11 +39,16 @@ class Game(arcade.Window):
         if self.started:
             t = self.get_time()
             for shape in self.shapes:
+                if shape.stopped:
+                    continue
                 (x, y, vx, vy) = self.kinematics_2d(0, 4, t)
                 dx = vx * dt
                 dy = vy * dt
                 shape.x += dx
                 shape.y += dy
+                if shape.y <= shape.r:
+                    shape.y = shape.r
+                    shape.stopped = True
                 
     
     def draw_circle(self, x, y):
