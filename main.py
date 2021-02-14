@@ -3,7 +3,6 @@ import math
 import time
 
 S_WIDTH = S_HEIGHT = 600
-SPRITE_SCALING_PROJECTILE = 0.25
 
 def kinematics_2d(theta, v_initial, t, g=-9.813):
         theta = theta * (math.pi/180)
@@ -41,17 +40,13 @@ class Projectile(arcade.Sprite):
         self.center_x += to_pixels(dx, 20)
         self.center_y += to_pixels(dy, 20)
 
-
-
-class Target:
-    def __init__(self, s_x, s_y, r, clr):
-        self.start_x = s_x
-        self.start_y = s_y
-        self.x = s_x
-        self.y = s_y
-        self.r = r
-        self.color = clr
-        self.stopped = True
+class Target(arcade.Sprite):
+    def __init__(self, img, size, s_x, s_y):
+        super().__init__(img, size)
+        self.set_position(s_x, s_y)
+        self.v0 = 0
+        self.theta0 = 0
+        self.start_time = 0
 
 class Game(arcade.Window):
 
@@ -60,6 +55,8 @@ class Game(arcade.Window):
         arcade.set_background_color(arcade.color.WHITE)
         self.proj_list = None
         self.proj = None
+        self.target_list = None
+        self.target = None
         self.started = False
         self.start_time = 0
         self.pixels_per_meter = pixels_per_meter
@@ -70,19 +67,29 @@ class Game(arcade.Window):
         self.mouse_x = 0
         self.mouse_y = 0
         self.launched = False
+        self.game_over = False
+        self.game_won = False
 
     def setup(self):
         self.proj_list = arcade.SpriteList()
-        self.proj = Projectile("shrek.png", SPRITE_SCALING_PROJECTILE, 100, 100)
+        self.target_list = arcade.SpriteList()
+        self.proj = Projectile("shrek.png", 0.25,  100, 100)
+        self.target = Target("fiona.jpeg", 0.3, 500, 500)
         self.proj_list.append(self.proj)
+        self.target_list.append(self.target)
+        self.game_over = False
+        self.game_won = False
         #self.started = True
         #self.start_time = time.time()
 
     def on_draw(self):
         arcade.start_render()
         self.proj_list.draw()
+        self.target_list.draw()
         if not self.launched:
             self.draw_vector(self.proj.center_x, self.proj.center_y, self.mouse_x, self.mouse_y, (255, 0, 0), "m/s")
+        if self.game_over:
+            self.end_message()
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_x = x
@@ -157,17 +164,29 @@ class Game(arcade.Window):
                 theta = t
         return theta
 
+    def end_message(self):
+        if self.game_won:
+            arcade.draw_text("YOU SAVED FIONA POGGERS",
+                        S_WIDTH/2, S_HEIGHT/2, arcade.color.GREEN, 30, width=S_WIDTH, align="center",
+                        anchor_x="center", anchor_y="center")
+        else:
+            arcade.draw_text("GET OUT OF MY SWAMP",
+                        S_WIDTH/2, S_HEIGHT/2, arcade.color.RED, 30, width=S_WIDTH, align="center",
+                        anchor_x="center", anchor_y="center")
+
     def update(self, dt):
         if self.started:
             self.proj_list.on_update()
-            if self.proj.center_y <=  self.proj.height/2:
+            if arcade.check_for_collision(self.proj, self.target):
+                self.game_won = True
+                self.game_over = True
+                self.proj.stopped = True
+            elif self.proj.center_y <=  self.proj.height/2:
                 self.proj.center_y = self.proj.height/2
                 self.proj.stopped = True
-    
-    def draw_circle(self, x, y):
-        r = 50
-        return arcade.draw_circle_filled(x, y, r, (0, 0, 0))
-
+                self.game_over = True
+            elif self.proj.center_x > S_WIDTH:
+                self.game_over = True
 
 def main():
     game = Game(S_WIDTH, S_HEIGHT)
