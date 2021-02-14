@@ -176,17 +176,18 @@ class Game(arcade.Window):
 
     def update(self, dt):
         if self.started:
-            self.proj_list.on_update()
-            if arcade.check_for_collision(self.proj, self.target):
-                self.game_won = True
-                self.game_over = True
-                self.proj.stopped = True
-            elif self.proj.center_y <=  self.proj.height/2:
-                self.proj.center_y = self.proj.height/2
-                self.proj.stopped = True
-                self.game_over = True
-            elif self.proj.center_x > S_WIDTH:
-                self.game_over = True
+            if not self.proj.stopped:
+                self.proj_list.on_update()
+                if arcade.check_for_collision(self.proj, self.target):
+                    self.game_won = True
+                    self.game_over = True
+                    self.proj.stopped = True
+                elif self.proj.center_y <=  self.proj.height/2:
+                    self.proj.center_y = self.proj.height/2
+                    self.proj.stopped = True
+                    self.game_over = True
+                elif self.proj.center_x > S_WIDTH:
+                    self.game_over = True
 
 def main():
     game = Game(S_WIDTH, S_HEIGHT)
